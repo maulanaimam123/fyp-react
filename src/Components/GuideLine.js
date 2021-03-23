@@ -1,0 +1,48 @@
+import { Container, Button, ButtonGroup } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
+import { StyledButton } from './Home.js'
+
+const useStyles = makeStyles({
+  root: {
+    border: 0,
+    opacity: '100%',
+    marginBottom: 15,
+    width: '90%',
+    color: 'white',
+    padding: '5px 100px',
+    textAlign: 'left'
+  },
+  listButton: {
+    paddingTop: 15,
+    paddingBottom: 15
+  }
+})
+
+function GuideLine() {
+  const classes = useStyles()
+  const steps = [
+    '1. Determine Beam Diameter',
+    '2. Determine Microscope Setup',
+    '3. Upload Line Profile Data',
+    '4. Simulation'
+  ]
+  return (
+    <Container className="App" maxWidth='sm'>
+      <header className="App-header">
+        <h2>Steps:</h2>
+        <ButtonGroup
+          orientation="vertical"
+          className={classes.root}
+          color='inherit'
+          aria-label="vertical contained primary button group"
+          variant="text"
+        >
+          {steps.map(s => (<Button className={classes.listButton}>{`${s}`}</Button>))}
+        </ButtonGroup>
+        <StyledButton text='Next' link='/working_board' />
+      </header>
+    </Container>
+  );
+}
+
+export default GuideLine;
