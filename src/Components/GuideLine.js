@@ -9,7 +9,7 @@ const useStyles = makeStyles({
     marginBottom: 15,
     width: '90%',
     color: 'white',
-    padding: '5px 100px',
+    padding: '5px 20px',
     textAlign: 'left'
   },
   listButton: {
@@ -22,8 +22,8 @@ function GuideLine() {
   const classes = useStyles()
   const steps = [
     '1. Determine Beam Diameter',
-    '2. Determine Microscope Setup',
-    '3. Upload Line Profile Data',
+    '2. Upload Line Profile Data',
+    '3. Determine Microscope Setup',
     '4. Simulation'
   ]
   return (
