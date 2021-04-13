@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
-import { Button, IconButton } from '@material-ui/core';
+import React, { useState, useEffect, useRef } from 'react'
+import { Button } from '@material-ui/core';
 import { PhotoCamera} from '@material-ui/icons';
 import { Delete, Replay, ArrowForward } from '@material-ui/icons';
 import Dropzone from 'react-dropzone';
+import axios from 'axios';
 
 
 
@@ -17,8 +18,9 @@ export default function DrawingArea() {
     const imageRef = useRef(null)
 
     // Utility for images interactions
-    const loadImage = () => {
+    const loadImage = new Promise((resolve, reject) => {
         const canvas = canvasRef.current
+        if (!canvas) reject()
         const ctx = canvas.getContext('2d')
         const image = new Image()
         image.src = imageData
@@ -28,8 +30,9 @@ export default function DrawingArea() {
             canvas.width = this.naturalWidth
             canvas.height = this.naturalHeight
             ctx.drawImage(this, 0, 0)
+            resolve()
         }
-    }
+    })
 
     const getRelativeCoordinates = (absoluteLineParams) => {
         const { left, top, width, height } = canvasRef.current.getBoundingClientRect()
@@ -76,24 +79,23 @@ export default function DrawingArea() {
 
 
     // UseEffect
-    useEffect(() => {
+    useEffect(async () => {
         if (!imageData) return
         setLines([])
-        loadImage()
+        await loadImage
     }, [imageData])
 
-    useLayoutEffect(() => {
-        if (isFirstRun.current | lines.length < 1) {
+    useEffect(async () => {
+        if (isFirstRun.current) {
             isFirstRun.current = false;
             return;
         }
         // Clear canvas
-        loadImage()
+        await loadImage
 
         // Draw lines
         lines.forEach(lineParams => (drawLine(lineParams)))
-
-    }, [lines])
+    })
 
     // Define Event Handling
     const onMouseDown = (e) => {
@@ -124,7 +126,16 @@ export default function DrawingArea() {
     const onMouseUp = () => {
         // set isDrawing to false
         setDrawing(false)
-        lines.forEach(lineParams => drawLine(lineParams))
+
+        // if last line is very short, remove it
+        const getLength = (lineParams) => {
+            const {x1, y1, x2, y2} = getCanvasCoordinates(lineParams)
+            return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
+        }
+        if (getLength(lines[lines.length - 1]) < 10) {
+            setLines([...lines.slice(0, lines.length - 1)])
+        }
+        setLines([...lines])
     }
 
     const onMouseLeave = () => {
@@ -154,23 +165,34 @@ export default function DrawingArea() {
     const handleDrop = (acceptedFiles) => {
         const imageURL = URL.createObjectURL(acceptedFiles[0])
         setImageData(imageURL)
+
+        // Upload to server
+        const data = new FormData()
+        data.append('file', acceptedFiles[0])
+        axios
+            .post('/upload_image', data)
+            .then(res => console.log(res))
+            .catch(err => console.log(err))
+
     }
 
     const handleDelete = () => {
         setImageData(false)
     }
 
-    const handleReset = async (e) => {
+    const handleReset = (e) => {
         setLines(new Array())
-        await setTimeout(() => {
-            console.log(lines)
-        }, 500)
-        console.log(lines)
-        // loadImage() // force to re-render --> somehow it doesnt work otherwise
     }
 
     const handleNext = () => {
-        console.log('next...')
+        const formData = new FormData()
+        formData.append('imageURL', imageData)
+        console.log('Sending ', lines)
+        formData.append('lines', JSON.stringify(lines))
+        axios
+            .post('/process_image', formData)
+            .then(data => console.log(data))
+            .catch(err => console.log(err))
     }
 
     // Define Styling
