@@ -177,7 +177,7 @@ export default function DrawingArea() {
         const {x1, y1} = getCanvasCoordinates(relativeCoordinates)
 
         // Update lines and profiles
-        const zipLineProfiles = lines.map((el, i) => ([el, i]))
+        const zipLineProfiles = lines.map((el, i) => ([el, profiles[i]]))
         const filteredLineProfiles = zipLineProfiles.filter(el => {
             const distToLine = getPointToLineDistance({pointX: x1, pointY: y1}, getCanvasCoordinates(el[0]))
             return distToLine > 4
