@@ -1,6 +1,8 @@
 import { Container, Button, ButtonGroup } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { StyledButton } from './Home.js'
+import TopAppBar from './TopAppBar'
+import { Toolbar, Typography } from '@material-ui/core';
 
 const useStyles = makeStyles({
   root: {
@@ -27,21 +29,25 @@ function GuideLine() {
     '4. Simulation'
   ]
   return (
-    <Container className="App" maxWidth='sm'>
-      <header className="App-header">
-        <h2>Steps:</h2>
-        <ButtonGroup
-          orientation="vertical"
-          className={classes.root}
-          color='inherit'
-          aria-label="vertical contained primary button group"
-          variant="text"
-        >
-          {steps.map(s => (<Button className={classes.listButton}>{`${s}`}</Button>))}
-        </ButtonGroup>
-        <StyledButton text='Next' link='/working_board' />
-      </header>
-    </Container>
+    <div>
+      <TopAppBar text='Workflow'/>
+      <Toolbar />
+      <Container className="App" maxWidth='sm'>
+        <header className="App-header">
+          <h2>Steps:</h2>
+          <ButtonGroup
+            orientation="vertical"
+            className={classes.root}
+            color='inherit'
+            aria-label="vertical contained primary button group"
+            variant="text"
+          >
+            {steps.map(s => (<Button className={classes.listButton}>{`${s}`}</Button>))}
+          </ButtonGroup>
+          <StyledButton text='Next' link='/working_board' />
+        </header>
+      </Container>
+    </div>
   );
 }
 

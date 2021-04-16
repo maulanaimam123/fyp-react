@@ -11,8 +11,10 @@ import axios from 'axios';
 export default function DrawingArea() {
     // Define states
     const [imageData, setImageData] = useState(false)
+    const [file, setFile] = useState(null)
     const [isDrawing, setDrawing ] = useState(false)
     const [lines, setLines] = useState([])
+    const [profiles, setProfiles] = useState([])
     const isFirstRun = useRef(true)
     const canvasRef = useRef(null)
     const imageRef = useRef(null)
@@ -82,6 +84,7 @@ export default function DrawingArea() {
     useEffect(async () => {
         if (!imageData) return
         setLines([])
+        setProfiles([])
         await loadImage
     }, [imageData])
 
@@ -123,7 +126,10 @@ export default function DrawingArea() {
         setLines(newLines)
     }
 
-    const onMouseUp = () => {
+    const onMouseUp = (e) => {
+        // Only select when left click
+        if (e.button == 2) return
+
         // set isDrawing to false
         setDrawing(false)
 
@@ -134,8 +140,18 @@ export default function DrawingArea() {
         }
         if (getLength(lines[lines.length - 1]) < 10) {
             setLines([...lines.slice(0, lines.length - 1)])
+            return
         }
-        setLines([...lines])
+
+        // Get profile intensity and beam diameter
+        const formData = new FormData()
+        formData.append('line', JSON.stringify(lines[lines.length - 1]))
+        formData.append('file', file)
+        axios
+            .post('/get_profile', formData)
+            .then(res => setProfiles([...profiles, res.data]))
+            .catch(err => console.log('Oops, something went wrong', err))
+        console.log(profiles)
     }
 
     const onMouseLeave = () => {
@@ -157,23 +173,24 @@ export default function DrawingArea() {
         const {clientX, clientY} = e
         const relativeCoordinates = getRelativeCoordinates({x1: clientX, y1: clientY, x2: clientX, y2: clientY})
         const {x1, y1} = getCanvasCoordinates(relativeCoordinates)
-        const newLines = lines.filter(lineParams => getPointToLineDistance({pointX: x1, pointY: y1}, getCanvasCoordinates(lineParams)) > 4)
+
+        // Update lines and profiles
+        const zipLineProfiles = lines.map((el, i) => ([el, i]))
+        const filteredLineProfiles = zipLineProfiles.filter(el => {
+            const distToLine = getPointToLineDistance({pointX: x1, pointY: y1}, getCanvasCoordinates(el[0]))
+            return distToLine > 4
+        })
+        const newLines = filteredLineProfiles.map(el => el[0])
+        const newProfiles = filteredLineProfiles.map(el => el[1])
         setLines(newLines)
+        setProfiles(newProfiles)
     }
 
     // Define Function
     const handleDrop = (acceptedFiles) => {
         const imageURL = URL.createObjectURL(acceptedFiles[0])
         setImageData(imageURL)
-
-        // Upload to server
-        const data = new FormData()
-        data.append('file', acceptedFiles[0])
-        axios
-            .post('/upload_image', data)
-            .then(res => console.log(res))
-            .catch(err => console.log(err))
-
+        setFile(acceptedFiles[0])
     }
 
     const handleDelete = () => {
@@ -182,6 +199,7 @@ export default function DrawingArea() {
 
     const handleReset = (e) => {
         setLines(new Array())
+        setProfiles(new Array())
     }
 
     const handleNext = () => {

@@ -1,39 +1,27 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
-from PIL import Image
 from werkzeug.utils import secure_filename
-import numpy as np
 import os
+from image_processing import *
+import json
 
 
 app = Flask(__name__)
 CORS(app)
-big_session = {}
 
 
-@app.route('/')
-def greeting():
-    return "Hello World!"
-
-@app.route('/upload_image', methods = ['POST'])
-def upload_image():
-    resp = Response
-    try:
-        file = request.files['file']
-        img = Image.open(file).convert('RGB')
-        big_session['image'] = np.array(img)[:,:,::-1] # convert RGB to BGR for opencv
-        return resp
-    except:
-        resp.status_code = 400
-        return resp
-
-
-
-@app.route('/process_image', methods = ['GET', 'POST'])
-def process_image():
-    try:
-        imageURL = request.form['imageURL']
-        print(imageURL)
-        return '200'
-    except:
-        return '400'
+@app.route('/get_profile', methods = ['POST'])
+def get_profile():
+    '''
+    End point to get line profile intensity
+    Called when onMouseUp event triggered
+    Return array of intensity and beam diameter
+    '''
+    file = request.files['file']
+    line_params = json.loads(request.form['line'])
+    img = read_image_response(file)
+    intensities = get_profile_intensity(img, line_params)
+    beam_diameter = get_beam_diameter(intensities)
+    print('intensities are ', intensities, type(intensities[0]))
+    print('beam diameter: ', beam_diameter)
+    return {'intensities': intensities, 'diameter': beam_diameter}
