@@ -4,6 +4,7 @@ import { PhotoCamera} from '@material-ui/icons';
 import { Delete, Replay, ArrowForward } from '@material-ui/icons';
 import Dropzone from 'react-dropzone';
 import axios from 'axios';
+import { useCustomContext } from './Context'
 
 
 
@@ -14,10 +15,11 @@ export default function DrawingArea() {
     const [file, setFile] = useState(null)
     const [isDrawing, setDrawing ] = useState(false)
     const [lines, setLines] = useState([])
-    const [profiles, setProfiles] = useState([])
+    const { profiles, setProfiles } = useCustomContext()
     const isFirstRun = useRef(true)
     const canvasRef = useRef(null)
     const imageRef = useRef(null)
+    const { step, setStep } = useCustomContext()
 
     // Utility for images interactions
     const loadImage = new Promise((resolve, reject) => {
@@ -203,14 +205,7 @@ export default function DrawingArea() {
     }
 
     const handleNext = () => {
-        const formData = new FormData()
-        formData.append('imageURL', imageData)
-        console.log('Sending ', lines)
-        formData.append('lines', JSON.stringify(lines))
-        axios
-            .post('/process_image', formData)
-            .then(data => console.log(data))
-            .catch(err => console.log(err))
+        setStep(step + 1)
     }
 
     // Define Styling

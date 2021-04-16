@@ -10,7 +10,7 @@ const useStyles = makeStyles({
     opacity: '100%',
     marginBottom: 15,
     width: '90%',
-    color: 'white',
+    color: 'black',
     padding: '5px 20px',
     textAlign: 'left'
   },
