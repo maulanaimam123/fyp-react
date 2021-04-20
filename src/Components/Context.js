@@ -9,9 +9,13 @@ export function useCustomContext() {
 export default function ContextProvider({children}) {
     const [step, setStep] = useState(0)
     const [profiles, setProfiles] = useState([])
+    const [isReadable, setReadable] = useState(true)
+    const [lines, setLines] = useState([])
     const values = {
         step, setStep,
         profiles, setProfiles,
+        isReadable, setReadable,
+        lines, setLines
     }
     return (
         <CustomContext.Provider value={values}>

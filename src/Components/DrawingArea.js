@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Button } from '@material-ui/core';
+import { Button, Typography } from '@material-ui/core';
 import { PhotoCamera} from '@material-ui/icons';
 import { Delete, Replay, ArrowForward } from '@material-ui/icons';
 import Dropzone from 'react-dropzone';
@@ -14,12 +14,13 @@ export default function DrawingArea() {
     const [imageData, setImageData] = useState(false)
     const [file, setFile] = useState(null)
     const [isDrawing, setDrawing ] = useState(false)
-    const [lines, setLines] = useState([])
+    const { lines, setLines } = useCustomContext()
     const { profiles, setProfiles } = useCustomContext()
     const isFirstRun = useRef(true)
     const canvasRef = useRef(null)
     const imageRef = useRef(null)
     const { step, setStep } = useCustomContext()
+    const { isReadable, setReadable } = useCustomContext()
 
     // Utility for images interactions
     const loadImage = new Promise((resolve, reject) => {
@@ -193,10 +194,25 @@ export default function DrawingArea() {
         const imageURL = URL.createObjectURL(acceptedFiles[0])
         setImageData(imageURL)
         setFile(acceptedFiles[0])
+
+        // Make request to get scalebar and energy readings
+        const formData = new FormData()
+        formData.append('file', acceptedFiles[0])
+        axios
+            .post('/upload_image', formData)
+            .then(data => console.log(data))
+            .catch(err => {
+                setReadable(false)
+                console.log('Unable to read scalebar in image')
+            })
+        
     }
 
     const handleDelete = () => {
         setImageData(false)
+        setProfiles([])
+        setLines([])
+        setReadable(true)
     }
 
     const handleReset = (e) => {
@@ -235,7 +251,7 @@ export default function DrawingArea() {
     }
 
     const buttonGroupStyle = {
-        display: 'flex',
+        display: isReadable? 'flex' : 'none',
         justifyContent: 'flex-end',
         alignItems: 'center'
     }
@@ -251,7 +267,14 @@ export default function DrawingArea() {
             <div style={boardStyle}>
                 {imageData? 
                 <div>
-                    <h3>Select your profiles</h3>
+                    <Typography
+                        variant='h5'
+                        style={{'marginBottom': 20}}
+                    >
+                    {isReadable?
+                        'Select your profiles' :
+                        'Unable to read scalebar, please input mannually'}
+                    </Typography>
                     <canvas
                         id='canvas'
                         style={imageStyle}

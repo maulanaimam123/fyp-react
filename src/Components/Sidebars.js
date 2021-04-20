@@ -1,8 +1,11 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { makeStyles } from '@material-ui/core/styles';
 import { Drawer, Toolbar, List, ListItem,
-         ListItemText } from '@material-ui/core';
+         ListItemText, TextField, Button,
+         Container, Typography, Box, Snackbar } from '@material-ui/core';
+import MuiAlert from '@material-ui/lab/Alert';
 import { useCustomContext } from './Context'
+import axios from 'axios'
 
 
 export default function SideNavBar({sideBarWidth = 240}) {
@@ -51,6 +54,7 @@ export default function SideNavBar({sideBarWidth = 240}) {
 }
 
 export function ProfilesBar({ profilesBarWidth = 320 }) {
+    const { isReadable, setReadable } = useCustomContext()
     const useStyles = makeStyles((theme) => ({
         drawer: {
             width: profilesBarWidth,
@@ -65,6 +69,38 @@ export function ProfilesBar({ profilesBarWidth = 320 }) {
     }));
     const classes = useStyles();
     const { profiles, setProfiles } = useCustomContext()
+    const { lines, setLines } = useCustomContext()
+    const [ open, setOpen ] = useState(false)
+
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        if (lines.length < 1) {
+            setOpen(true)
+            return
+        }
+
+        const form = e.target
+        const formData = new FormData()
+        formData.append('scalebar', form.scalebar.value)
+        formData.append('energy', form.energy.value)
+        formData.append('lines', JSON.stringify(lines))
+        axios
+            .post('/manual_input', formData)
+            .then(res => {
+                setReadable(true)
+                setLines([])
+                setProfiles([])
+                console.log(res)
+            })
+            .catch(err => console.log(err))
+    }
+
+    const handleAlertClose = (event, reason) => {
+        if (reason === 'clickaway') {
+          return;
+        }
+        setOpen(false);
+    };
 
     return (
         <Drawer
@@ -77,7 +113,53 @@ export function ProfilesBar({ profilesBarWidth = 320 }) {
         >
             <Toolbar />
             <div className={classes.drawerContainer}>
-                {profiles.map(profile => <p>{JSON.stringify(profile)}</p>)}
+            {isReadable?
+                profiles.map(profile => <p>{JSON.stringify(profile)}</p>)
+                    :
+                <Container>
+                    <Toolbar />
+                    <Typography variant='h6'>Drag a line and input scalebar</Typography>
+                    <form noValidate onSubmit={handleSubmit} id='form'>
+                        <TextField
+                            variant="outlined"
+                            margin="normal"
+                            required
+                            fullWidth
+                            id="scalebar"
+                            label="Scalebar Reading (nm)"
+                            name="scalebar"
+                            autoFocus
+                            size='small'
+                            type='number'
+                        />
+                        <TextField
+                            variant="outlined"
+                            margin="dense"
+                            required
+                            fullWidth
+                            id="energy"
+                            label="Energy (keV)"
+                            name="energy"
+                            size='small'
+                            type='number'
+                        />
+                        <Box display='flex' justifyContent='flex-end' mt={1}>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                            >
+                                Input
+                            </Button>
+                            <Snackbar open={open} autoHideDuration={6000} onClose={handleAlertClose}>
+                                <MuiAlert elevation={6} variant="filled" onClose={handleAlertClose} severity="error">
+                                    Drag a <strong>line</strong> or more to create <strong>scalebar</strong>!
+                                </MuiAlert>
+                            </Snackbar>
+                        </Box>
+                    </form>
+                </Container>
+            }
             </div>
         </Drawer>
     )
