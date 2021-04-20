@@ -6,6 +6,7 @@ import { Drawer, Toolbar, List, ListItem,
 import MuiAlert from '@material-ui/lab/Alert';
 import { useCustomContext } from './Context'
 import axios from 'axios'
+import LineProfileViewer from './LineProfileViewer'
 
 
 export default function SideNavBar({sideBarWidth = 240}) {
@@ -53,7 +54,7 @@ export default function SideNavBar({sideBarWidth = 240}) {
     )
 }
 
-export function ProfilesBar({ profilesBarWidth = 320 }) {
+export function ProfilesBar({ profilesBarWidth = 400 }) {
     const { isReadable, setReadable } = useCustomContext()
     const useStyles = makeStyles((theme) => ({
         drawer: {
@@ -114,7 +115,7 @@ export function ProfilesBar({ profilesBarWidth = 320 }) {
             <Toolbar />
             <div className={classes.drawerContainer}>
             {isReadable?
-                profiles.map(profile => <p>{JSON.stringify(profile)}</p>)
+                <LineProfileViewer profiles={profiles} />
                     :
                 <Container>
                     <Toolbar />

@@ -27,7 +27,6 @@ export default function WorkingBoard() {
         <TopAppBar text='Working Board'/>
         <SideNavBar sideBarWidth={240} />
         <main className={classes.content}>
-          <Toolbar />
           <Container maxWidth='md' style={{ marginTop: 30 }}>
             <DrawingArea/>
           </Container>

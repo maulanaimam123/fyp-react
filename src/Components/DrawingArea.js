@@ -11,7 +11,7 @@ import { useCustomContext } from './Context'
 
 export default function DrawingArea() {
     // Define states
-    const [imageData, setImageData] = useState(false)
+    const { imageData, setImageData } = useCustomContext()
     const [file, setFile] = useState(null)
     const [isDrawing, setDrawing ] = useState(false)
     const { lines, setLines } = useCustomContext()
