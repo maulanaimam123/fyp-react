@@ -285,9 +285,6 @@ export default function DrawingArea() {
                         onContextMenu={onRightClick}
                         ref={canvasRef}
                         />
-                    <p style={{display: 'None'}}>
-                        (lines.map(line => line.x1))
-                    </p>
                     <div style={buttonGroupStyle}>
                         <Button
                             variant="contained"
@@ -314,7 +311,12 @@ export default function DrawingArea() {
                 </div>
                 :
                 <div>
-                    <h3>Upload your image!</h3>
+                    <Typography 
+                        variant='h5'
+                        style={{marginBottom: 20, marginTop: 10}}
+                    >
+                        Upload your image!
+                    </Typography>
                     <Dropzone onDrop={handleDrop}>
                     {({ getRootProps, getInputProps }) => (
                         <section>

@@ -3,7 +3,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import TopAppBar from './TopAppBar'
 import SideNavBar, { ProfilesBar } from './Sidebars'
 import DrawingArea from './DrawingArea.js'
-import ContextProvider from './Context'
+import ProfileUploader from './ProfileUploader'
+import ContextProvider, { useCustomContext } from './Context'
 import { CssBaseline, Toolbar, Container } from '@material-ui/core'
 
 const useStyles = makeStyles((theme) => ({
@@ -16,6 +17,26 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+function ContentSelector () {
+  const { step } = useCustomContext()
+  switch (step) {
+    case 0: return DrawingArea();
+    case 1: return ProfileUploader();
+  }
+}
+
+function RightSideBarSelector() {
+  const { step } = useCustomContext()
+  switch (step) {
+    case 0: return ProfilesBar({ profilesBarWidth: 400 });
+    case 1: return(
+      <div>
+        <Toolbar />
+        <h2>Hello Sidebar</h2>
+      </div>
+    )
+  }
+}
 
 export default function WorkingBoard() {
   const classes = useStyles();
@@ -27,11 +48,12 @@ export default function WorkingBoard() {
         <TopAppBar text='Working Board'/>
         <SideNavBar sideBarWidth={240} />
         <main className={classes.content}>
-          <Container maxWidth='md' style={{ marginTop: 30 }}>
-            <DrawingArea/>
+          <Container maxWidth='md'>
+            <Toolbar />
+            <ContentSelector />
           </Container>
         </main>
-        <ProfilesBar />
+        <RightSideBarSelector />
       </div>
     </ContextProvider>
   );

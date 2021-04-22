@@ -3,11 +3,15 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
 from image_processing import *
+from data_processing import read_file
+import uuid
 import json
 
 
 app = Flask(__name__)
 app.secret_key = 'maulana-fyp'
+TEMP_PATH_CSV = './tmp/line_profile/'
+TEMP_PATH_SIMULATION = './tmp/simulation/'
 CORS(app)
 
 @app.route('/upload_image', methods = ['POST'])
@@ -60,3 +64,16 @@ def get_profile():
     print('intensities are ', intensities, type(intensities[0]))
     print('beam diameter: ', beam_diameter)
     return {'intensities': intensities, 'diameter': beam_diameter}
+
+@app.route('/upload_excel', methods = ['POST'])
+def upload_excel():
+    # Reading excel to pandas dataframe
+    file = request.files['file']
+    df = read_file(file)
+
+    # Storing dataframe in temporary storage
+    session_id = str(uuid.uuid4())
+    session['session_id'] = session_id
+    df.to_csv(os.path.join(TEMP_PATH_CSV, f'{session_id}.csv'))
+    print('OK Success!')
+    return jsonify(success=True)

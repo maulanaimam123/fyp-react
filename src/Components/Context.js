@@ -12,12 +12,13 @@ export default function ContextProvider({children}) {
     const [isReadable, setReadable] = useState(true)
     const [lines, setLines] = useState([])
     const [imageData, setImageData] = useState(false)
+
     const values = {
         step, setStep,
         profiles, setProfiles,
         isReadable, setReadable,
         lines, setLines,
-        imageData, setImageData
+        imageData, setImageData,
     }
     return (
         <CustomContext.Provider value={values}>
