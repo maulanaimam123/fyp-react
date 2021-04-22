@@ -231,7 +231,7 @@ function Instruction() {
                     <div className={classes.actionsContainer}>
                         <div>
                         <Button
-                            variant={activeStep === 0 ? 'contained' : 'outlined'}
+                            variant={'outlined'}
                             color={activeStep === 0 ? 'secondary' : 'default'}
                             onClick={activeStep === 0 ? handlePrevPage : handleBack}
                             className={classes.button}

@@ -69,8 +69,8 @@ def check_length(df):
     Minimum: 10.
     '''
     POSITION = 'POSITION'
+    length = df[POSITION].nunique()
+    if length < 10:
+        return False, length
 
-    if df[POSITION].nunique() < 10:
-        return False
-
-    return True
+    return True, length

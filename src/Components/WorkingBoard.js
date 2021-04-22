@@ -4,6 +4,7 @@ import TopAppBar from './TopAppBar'
 import SideNavBar, { ProfilesBar } from './Sidebars'
 import DrawingArea from './DrawingArea.js'
 import ProfileUploader from './ProfileUploader'
+import MicroscopeSetup from './MicroscopeSetup'
 import ContextProvider, { useCustomContext } from './Context'
 import { CssBaseline, Toolbar, Container } from '@material-ui/core'
 
@@ -14,6 +15,11 @@ const useStyles = makeStyles((theme) => ({
   content: {
     flexGrow: 1,
     padding: theme.spacing(3),
+  },
+  container: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   }
 }));
 
@@ -22,6 +28,7 @@ function ContentSelector () {
   switch (step) {
     case 0: return DrawingArea();
     case 1: return ProfileUploader();
+    case 2: return MicroscopeSetup();
   }
 }
 
@@ -47,8 +54,8 @@ export default function WorkingBoard() {
         <TopAppBar text='Working Board'/>
         <SideNavBar sideBarWidth={240} />
         <main className={classes.content}>
-          <Container maxWidth='md'>
-            <Toolbar />
+          <Toolbar />
+          <Container maxWidth='md' className={classes.container}>
             <ContentSelector />
           </Container>
         </main>

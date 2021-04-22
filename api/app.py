@@ -65,6 +65,16 @@ def get_profile():
     print('beam diameter: ', beam_diameter)
     return {'intensities': intensities, 'diameter': beam_diameter}
 
+@app.route('/set_diameter', methods = ['POST'])
+def set_diameter():
+    '''
+    End point to save beam diameter in the server session
+    '''
+    diameters = json.loads(request.form['diameters'])
+    session['beam_diameter'] = min(diameters)
+    
+    return jsonify(success=True)
+
 @app.route('/upload_excel', methods = ['POST'])
 def upload_excel():
     file = request.files['file']
@@ -87,8 +97,9 @@ def upload_excel():
         is_column_good = check_columns(df)
         assert is_column_good, 'Column Error - Make sure that all columns are correct!'
 
-        is_length_good = check_length(df)
+        is_length_good, length = check_length(df)
         assert is_length_good, 'Length Error - Make sure that data have minimum 10 entries from different positions'
+        session['number_of_beam'] = length
 
         # Saving dataframe to tmp for later use
         df.to_csv(os.path.join(TEMP_PATH_CSV, f'{session_id}.csv'))
@@ -98,3 +109,13 @@ def upload_excel():
 
     except AssertionError as err:
         return str(err), 400
+
+@app.route('/get_sample_params', methods = ['GET'])
+def get_sample_params():
+    return {
+        'sampleName': session['sample_name'],
+        'energy': session['energy'],
+        'sessionID': session['session_id'],
+        'numberOfBeam': session['number_of_beam'],
+        'beamDiameter': session['beam_diameter']
+    }

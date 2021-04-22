@@ -221,6 +221,14 @@ export default function DrawingArea() {
     }
 
     const handleNext = () => {
+        // make request to set beam diameters
+        const diameters = profiles.map(el => el.diameter)
+        const formData = new FormData()
+        formData.append('diameters', JSON.stringify(diameters))
+        axios
+            .post('/set_diameter', formData)
+            .then(res => console.log(res))
+            .catch(err => console.log(err))
         setStep(step + 1)
     }
 
@@ -304,6 +312,7 @@ export default function DrawingArea() {
                             variant="contained"
                             color="primary"
                             startIcon={<ArrowForward />}
+                            disabled={profiles.length === 0}
                             onClick={handleNext}
                             style={buttonStyle}
                         > Next </Button>
