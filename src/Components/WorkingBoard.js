@@ -29,10 +29,9 @@ function RightSideBarSelector() {
   const { step } = useCustomContext()
   switch (step) {
     case 0: return ProfilesBar({ profilesBarWidth: 400 });
-    case 1: return(
+    default: return(
       <div>
         <Toolbar />
-        <h2>Hello Sidebar</h2>
       </div>
     )
   }

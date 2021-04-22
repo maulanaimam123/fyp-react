@@ -67,13 +67,34 @@ def get_profile():
 
 @app.route('/upload_excel', methods = ['POST'])
 def upload_excel():
-    # Reading excel to pandas dataframe
     file = request.files['file']
-    df = read_file(file)
+    file_name = request.form['fileName']
+    try:
+        # Reading excel to pandas dataframe
+        df = read_file(file, file_name)
+    
+        # Creating session ID
+        session_id = str(uuid.uuid4())
+        session['session_id'] = session_id
 
-    # Storing dataframe in temporary storage
-    session_id = str(uuid.uuid4())
-    session['session_id'] = session_id
-    df.to_csv(os.path.join(TEMP_PATH_CSV, f'{session_id}.csv'))
-    print('OK Success!')
-    return jsonify(success=True)
+        # Reading other information
+        sample_name, energy = get_info(file_name)
+        assert sample_name != '' and energy != 0.00, 'File Name Error - Unable to read sample name and energy, please follow the naming format!'
+        session['sample_name'] = sample_name
+        session['energy'] = energy
+
+        # Check quality of dataframe
+        is_column_good = check_columns(df)
+        assert is_column_good, 'Column Error - Make sure that all columns are correct!'
+
+        is_length_good = check_length(df)
+        assert is_length_good, 'Length Error - Make sure that data have minimum 10 entries from different positions'
+
+        # Saving dataframe to tmp for later use
+        df.to_csv(os.path.join(TEMP_PATH_CSV, f'{session_id}.csv'))
+
+        # Return OK response
+        return jsonify(success=True)
+
+    except AssertionError as err:
+        return str(err), 400

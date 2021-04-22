@@ -1,12 +1,17 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { Typography, Button, makeStyles, Stepper,
-         Step, StepLabel, StepContent, Paper, Tab } from '@material-ui/core'
+         Step, StepLabel, StepContent, Paper, Snackbar } from '@material-ui/core'
 import Dropzone from 'react-dropzone'
 import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close';
+import MuiAlert from '@material-ui/lab/Alert';
 import { useCustomContext } from './Context'
 import Spinner from './spinner/Spinner'
 import axios from 'axios'
 import img from './images/image1.jpg'
+
+const ProfileUploaderContext = React.createContext()
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -43,14 +48,8 @@ const useStyles = makeStyles((theme) => ({
         alignItems: 'center',
         cursor: 'pointer'
     },
-    uploadedAreaStyle: {
-        border: '3px dashed gray',
-        height: 250,
-        width: 600,
-        borderRadius: 20,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
+    margin: {
+        margin: theme.spacing(1),
     }
   }));
 
@@ -60,29 +59,42 @@ function getSteps() {
 
 function Uploader() {
     const classes = useStyles()
-    const [ uploadingStatusExcel, setUploadingStatusExcel ] = useState('idle')
-    const [ fileName, setFileName ] = useState('')
+    const { uploadStatus, setUploadStatus } = useContext(ProfileUploaderContext)
+    const { fileName, setFileName } = useContext(ProfileUploaderContext)
+    const [ alertMessage, setAlertMessage ] = useState('')
+    const [ open, setOpen ] = useState(false)
+
+    const handleAlertClose = (event, reason) => {
+        if (reason === 'clickaway') {
+          return;
+        }
+        setOpen(false);
+    };
+
     const handleDrop = (acceptedFiles) => {
-        setUploadingStatusExcel('uploading')
+        setUploadStatus('uploading')
         setFileName(acceptedFiles[0].name)
         console.log('uploading excel...')
         const formData = new FormData()
         formData.append('file', acceptedFiles[0])
+        formData.append('fileName', acceptedFiles[0].name)
         axios
             .post('/upload_excel', formData)
             .then(data => {
                 console.log(data)
-                setUploadingStatusExcel('done')
+                setUploadStatus('done')
             })
             .catch(err => {
-                setUploadingStatusExcel('idle')
-                console.log('Oops, something went wrong...')
+                setUploadStatus('idle')
+                setOpen(true)
+                setAlertMessage(err.response.data)
             })
     }
 
-    switch (uploadingStatusExcel) {
+    switch (uploadStatus) {
         case 'idle':
             return (
+                <div>
                 <Dropzone
                     onDrop={handleDrop}
                     >
@@ -103,24 +115,28 @@ function Uploader() {
                         </section>
                     )}
                 </Dropzone>
+                <Snackbar open={open} autoHideDuration={6000} onClose={handleAlertClose}>
+                    <MuiAlert elevation={6} variant="filled" onClose={handleAlertClose} severity="error">
+                        {alertMessage}
+                    </MuiAlert>
+                </Snackbar>
+                </div>
         );
         case 'uploading': return (
             <Spinner />
         );
         case 'done': return (
-            <div className={classes.uploadedAreaStyle}>
-                <div style={{display:'block'}}>
-                    <Typography>Done! - {fileName}</Typography>
-                </div>
-                <div>
-                    <Button
-                        variant='contained'
-                        color='secondary'
-                        onClick={() => setUploadingStatusExcel('idle')}
-                        >
-                            Delete
-                        </Button>
-                </div>
+            <div className={classes.assetContainer}>
+                <InsertDriveFileIcon className={classes.margin}/>
+                <Typography>Done! - <strong>{fileName}</strong></Typography>
+                <IconButton
+                    aria-label="delete"
+                    className={classes.margin}
+                    size="small"
+                    onClick={() => setUploadStatus('idle')}
+                    >
+                    <CloseIcon fontSize="small" />
+                </IconButton>
             </div>
         )
     }
@@ -176,6 +192,12 @@ function Instruction() {
     const [activeStep, setActiveStep] = useState(0);
     const instructions = getSteps();
     const { setStep } = useCustomContext()
+    const [ uploadStatus, setUploadStatus ] = useState('idle')
+    const [ fileName, setFileName ] = useState('')
+    const passedValue = {
+        uploadStatus, setUploadStatus,
+        fileName, setFileName
+    }
 
     const handleNext = () => {
         setActiveStep((prevActiveStep) => prevActiveStep + 1);
@@ -199,6 +221,7 @@ function Instruction() {
 
     return (
         <div className={classes.root}>
+            <ProfileUploaderContext.Provider value={passedValue}>
             <Stepper activeStep={activeStep} orientation="vertical">
                 {instructions.map((label, index) => (
                 <Step key={label}>
@@ -220,6 +243,7 @@ function Instruction() {
                             color="primary"
                             onClick={activeStep === instructions.length - 1 ? handleFinish : handleNext}
                             className={classes.button}
+                            disabled={(activeStep === instructions.length - 1) && (uploadStatus !== 'done')}
                         >
                             {activeStep === instructions.length - 1 ? 'Finish' : 'Next'}
                         </Button>
@@ -237,6 +261,7 @@ function Instruction() {
                 </Button>
                 </Paper>
             )}
+            </ProfileUploaderContext.Provider>
         </div>
     )
 }

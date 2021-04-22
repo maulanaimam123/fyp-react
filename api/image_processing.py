@@ -1,10 +1,9 @@
 import numpy as np
 from PIL import Image
 import math
-import json
 import cv2
 import pytesseract as tess
-import re
+from data_processing import *
 
 def read_image_response(request):
     file = request.files['file']
@@ -18,19 +17,6 @@ def get_text(img):
     output: str - all text in image
     '''
     return tess.image_to_string(img)
-
-def get_energy_reading_keV(string):
-    match = re.search(r'\d+(?:\.\d+)+kV|\d+(?:\.\d+)+keV', string)[0]
-    energy_string = re.findall(r'\d+(?:\.\d+)?', match)[0]
-    energy_keV = float(energy_string) if len(energy_string) > 0 else 0.00
-    return energy_keV
-
-def get_scalebar_reading_nm(string):
-    match = re.search(r'\d+nm|\d+um', string)[0]
-    numbers = float(re.findall(r'\d+(?:\.\d+)?', match)[0])
-    if match.endswith('um'):
-        numbers *= 1000
-    return numbers
 
 def get_scalebar_relative_size(pil_img):
     # convert PIL Image to cv2 image
