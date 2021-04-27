@@ -163,7 +163,7 @@ function GetStepContent({ step }) {
                     <Typography>Put in the line profile data together with the column name as follow:</Typography>
                     <Typography style={{textIndent: '2rem'}}><strong>POSITION</strong> - Beam relative position in <strong>micrometer</strong>, starting from zero.</Typography>
                     <Typography style={{textIndent: '2rem'}}><strong>TOTAL</strong> - Total weight percentage of all atomic components.</Typography>
-                    <Typography style={{textIndent: '2rem'}}><strong>XX AT%</strong> - Atomic percentage of each individual component, XX is the atomic symbol e.g. Mg, O, Fe, S</Typography>
+                    <Typography style={{textIndent: '2rem'}}><strong>XX AT%</strong> - Elements atomic percentage, XX is the atomic symbol e.g. Al, C, Fe, etc.</Typography>
                     <div className={classes.assetContainer}>
                         <img
                             src={img}
@@ -267,10 +267,18 @@ function Instruction() {
 }
 
 export default function ProfileUploader() {
+    const boardStyle = {
+        width: '90%',
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        padding: 15,
+        background: 'white',
+        borderRadius: 10
+    }
     return (
-        <div style={{border: '1px solid black', background:'white', padding: 15}}>
+        <Paper style={boardStyle}>
             <Typography variant='h5'>Upload Line Profile Data</Typography>
             <Instruction />
-        </div>
+        </Paper>
     )
 }

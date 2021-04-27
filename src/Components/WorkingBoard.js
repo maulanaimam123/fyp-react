@@ -4,7 +4,8 @@ import TopAppBar from './TopAppBar'
 import SideNavBar, { ProfilesBar } from './Sidebars'
 import DrawingArea from './DrawingArea.js'
 import ProfileUploader from './ProfileUploader'
-import MicroscopeSetup from './MicroscopeSetup'
+import AdditionalSetting from './AdditionalSetting'
+import Simulation from './Simulation'
 import ContextProvider, { useCustomContext } from './Context'
 import { CssBaseline, Toolbar, Container } from '@material-ui/core'
 
@@ -26,9 +27,11 @@ const useStyles = makeStyles((theme) => ({
 function ContentSelector () {
   const { step } = useCustomContext()
   switch (step) {
-    case 0: return DrawingArea();
-    case 1: return ProfileUploader();
-    case 2: return MicroscopeSetup();
+    case 0: return <DrawingArea />;
+    case 1: return <ProfileUploader />;
+    case 2: return <AdditionalSetting />;
+    case 3: return <Simulation />;
+    default: return <div />
   }
 }
 

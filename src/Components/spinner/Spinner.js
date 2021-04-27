@@ -5,9 +5,9 @@ export default function Spinner({ message }) {
     return (
       <div className="loader-container">
         <div className="loader" />
-        <span className="loading-text">
+        <div className="loading-text">
             {message ? message : "Loading..."}
-        </span>
+        </div>
       </div>
     )
 }

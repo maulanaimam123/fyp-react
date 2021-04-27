@@ -26,8 +26,8 @@ export default function SideNavBar({sideBarWidth = 240}) {
     const { step } = useCustomContext()
     const navigation = [
         'Beam Diameter',
-        'Sample Settings',
-        'Microscope Settings',
+        'Sample Upload',
+        'Additional Settings',
         'Simulation',
     ]
     return (

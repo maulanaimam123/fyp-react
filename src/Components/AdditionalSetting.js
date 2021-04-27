@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { useCustomContext } from './Context'
 import Spinner from './spinner/Spinner'
 import axios from 'axios'
-import { Button, TextField, Box, Grid, Typography, Toolbar } from '@material-ui/core'
+import { Button, TextField, Box, Grid, Typography, Toolbar, Paper } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles';
+import CompositionViewer from './CompositionViewer'
 
 const useStyles = makeStyles((theme) => ({
     buttonGroup: {
@@ -29,11 +30,20 @@ const useStyles = makeStyles((theme) => ({
     }
   }));
 
-export default function MicroscopeSetup() {
-    const { setStep } = useCustomContext()
+export default function AdditionalSetting() {
+    const { step, setStep } = useCustomContext()
     const classes = useStyles()
     const [isStillFetching, setStillFetching] = useState(true)
     const [sampleParams, setSampleParams] = useState({})
+
+    const boardStyle = {
+        width: '90%',
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        padding: 15,
+        background: 'white',
+        borderRadius: 10
+    }
 
     useEffect(() => {
         console.log('fetching...')
@@ -42,30 +52,63 @@ export default function MicroscopeSetup() {
             .then(res => {
                 setSampleParams(res.data)
                 setStillFetching(false)
+                console.log(res.data.data)
                 console.log(res.data)
                 console.log('Fetching data finished...')
             })
             .catch(err => console.log(err))
     }, [])
 
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        const data = e.target
+
+        const formData = new FormData()
+        formData.append('sample_name', data.sampleName.value)
+        formData.append('number_of_electron', data.numberOfElectron.value)
+        formData.append('energy', data.energy_keV.value)
+        formData.append('beam_diameter', data.beamDiameter.value)
+        formData.append('density_start', data.densityStart.value)
+        formData.append('density_end', data.densityEnd.value)
+
+        console.log(formData)
+        console.log('post request...')
+        const response = await axios.post('/confirm_parameters', formData)
+
+        setStillFetching(false)
+        setStep(step + 1)
+    }
+
     return (
-        <div style={{border: '1px solid black', background:'white', padding: 15, width: '60%'}}>
-            <Typography variant='h5'>Microscope Settings</Typography>
-            <Toolbar />
+        <Paper style={boardStyle}>
+            <Typography variant='h5'>Additional Settings</Typography>
             <div className={classes.base}>
                 { isStillFetching ? <Spinner /> :
-                <form noValidate autoComplete="off" id='mainForm'>
+                <div>
+                <CompositionViewer data={JSON.parse(sampleParams.data)}/>
+                <form noValidate autoComplete="off"  onSubmit={handleSubmit}>
                     <Grid container spacing={1}>
-                        <Grid item xs={12}>
+                        <Grid item xs={6}>
                             <TextField
                                 id='sampleName'
-                                name='sampleName'
                                 label='Sample Name'
                                 variant='outlined'
                                 className={classes.item}
                                 size='small'
                                 required
                                 defaultValue={ sampleParams.sampleName }
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                id='numberOfElectron'
+                                label='Number of Electron (per beam)'
+                                variant='outlined'
+                                type='number'
+                                className={classes.item}
+                                size='small'
+                                required
+                                defaultValue={ 5000 }
                             />
                         </Grid>
                         <Grid item xs={6}>
@@ -89,29 +132,28 @@ export default function MicroscopeSetup() {
                                 className={classes.item}
                                 size='small'
                                 required
-                                defaultValue={ sampleParams.beamDiameter.toFixed(1) }
+                                defaultValue={ sampleParams.beamDiameter }
                             />
                         </Grid>
                         <Grid item xs={6}>
                             <TextField
-                                id='beamAngle'
-                                label='Sample Tilt Angle (in tetha)'
+                                id='densityStart'
+                                label='Density Start (kg/m3)'
                                 variant='outlined'
                                 type='number'
+                                focused
                                 className={classes.item}
                                 size='small'
-                                defaultValue='0'
                             />
                         </Grid>
                         <Grid item xs={6}>
                             <TextField
-                                id='numberOfBeam'
-                                label='Number of Beam'
+                                id='densityEnd'
+                                label='Density End (kg/m3)'
                                 variant='outlined'
                                 type='number'
                                 className={classes.item}
                                 size='small'
-                                defaultValue={ sampleParams.numberOfBeam }
                             />
                         </Grid>
                         <Toolbar />
@@ -129,7 +171,7 @@ export default function MicroscopeSetup() {
                                     className={classes.button}
                                     variant="contained"
                                     color="primary"
-                                    // onClick={() => setStep(step => step + 1)
+                                    type='submit'
                                 >
                                     Next
                                 </Button>
@@ -137,8 +179,9 @@ export default function MicroscopeSetup() {
                         </Grid>
                     </Grid>
                 </form>
+                </div>
                 }
             </div>
-        </div>
+        </Paper>
     )
 }

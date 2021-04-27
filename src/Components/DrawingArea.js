@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Button, Typography } from '@material-ui/core';
+import { Button, Typography, Paper } from '@material-ui/core';
 import { PhotoCamera} from '@material-ui/icons';
 import { Delete, Replay, ArrowForward } from '@material-ui/icons';
 import Dropzone from 'react-dropzone';
 import axios from 'axios';
 import { useCustomContext } from './Context'
+import Spinner from './spinner/Spinner'
 
 
 
@@ -21,6 +22,7 @@ export default function DrawingArea() {
     const imageRef = useRef(null)
     const { step, setStep } = useCustomContext()
     const { isReadable, setReadable } = useCustomContext()
+    const [isLoading, setLoading] = useState(false)
 
     // Utility for images interactions
     const loadImage = new Promise((resolve, reject) => {
@@ -191,8 +193,8 @@ export default function DrawingArea() {
 
     // Define Function
     const handleDrop = (acceptedFiles) => {
+        setLoading(true)
         const imageURL = URL.createObjectURL(acceptedFiles[0])
-        setImageData(imageURL)
         setFile(acceptedFiles[0])
 
         // Make request to get scalebar and energy readings
@@ -200,8 +202,14 @@ export default function DrawingArea() {
         formData.append('file', acceptedFiles[0])
         axios
             .post('/upload_image', formData)
-            .then(data => console.log(data))
+            .then((data) => {
+                console.log(data)
+                setLoading(false)
+                setImageData(imageURL)
+            })
             .catch(err => {
+                setLoading(false)
+                setImageData(imageURL)
                 setReadable(false)
                 console.log('Unable to read scalebar in image')
             })
@@ -234,12 +242,13 @@ export default function DrawingArea() {
 
     // Define Styling
     const boardStyle = {
-        width: imageData? null : '60%',
+        width: imageData? null : 500,
         height: imageData? null: 500,
         marginLeft: 'auto',
         marginRight: 'auto',
-        border: '1px solid black',
-        padding: 15
+        padding: 15,
+        background: 'white',
+        borderRadius: 10
     }
 
     const dropAreaStyle = {
@@ -253,15 +262,23 @@ export default function DrawingArea() {
         cursor: 'pointer'
     }
 
+    const centerContainerStyle = {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+    }
+
     const imageStyle = {
-        width: '100%',
-        height: 'auto'
+        maxHeight: '70vh',
+        height: 'auto',
+        borderRadius: 5
     }
 
     const buttonGroupStyle = {
-        display: isReadable? 'flex' : 'none',
+        display: 'flex',
         justifyContent: 'flex-end',
-        alignItems: 'center'
+        alignItems: 'center',
+        marginTop: 2
     }
 
     const buttonStyle = {
@@ -269,10 +286,18 @@ export default function DrawingArea() {
         marginTop: 5
     }
 
+    const hiddenButtonStyle = {
+        display: isReadable? null : 'none'
+    }
+
+    const spinnerWrapperStyle = {
+        height: 300
+    }
+
     // Component
     return (
         <div>
-            <div style={boardStyle}>
+            <Paper style={boardStyle}>
                 {imageData? 
                 <div>
                     <Typography
@@ -280,19 +305,21 @@ export default function DrawingArea() {
                         style={{'marginBottom': 20}}
                     >
                     {isReadable?
-                        'Select your profiles' :
-                        'Unable to read scalebar, please input mannually'}
+                        'Select Profiles' :
+                        'Unable to Read Scalebar, please Input Mannually'}
                     </Typography>
-                    <canvas
-                        id='canvas'
-                        style={imageStyle}
-                        onMouseDown={onMouseDown}
-                        onMouseMove={onMouseMove}
-                        onMouseUp={onMouseUp}
-                        onMouseLeave={onMouseLeave}
-                        onContextMenu={onRightClick}
-                        ref={canvasRef}
-                        />
+                    <div style={centerContainerStyle}>
+                        <canvas
+                            id='canvas'
+                            style={imageStyle}
+                            onMouseDown={onMouseDown}
+                            onMouseMove={onMouseMove}
+                            onMouseUp={onMouseUp}
+                            onMouseLeave={onMouseLeave}
+                            onContextMenu={onRightClick}
+                            ref={canvasRef}
+                            />
+                    </div>
                     <div style={buttonGroupStyle}>
                         <Button
                             variant="contained"
@@ -306,7 +333,7 @@ export default function DrawingArea() {
                             color="default"
                             startIcon={<Replay />}
                             onClick={handleReset}
-                            style={buttonStyle}
+                            style={{...buttonStyle, ...hiddenButtonStyle}}
                         > Reset </Button>
                         <Button
                             variant="contained"
@@ -314,9 +341,14 @@ export default function DrawingArea() {
                             startIcon={<ArrowForward />}
                             disabled={profiles.length === 0}
                             onClick={handleNext}
-                            style={buttonStyle}
+                            style={{...buttonStyle, ...hiddenButtonStyle}}
                         > Next </Button>
                     </div>
+                </div>
+                :
+                isLoading?
+                <div style={{...spinnerWrapperStyle, ...centerContainerStyle}}>
+                    <Spinner />
                 </div>
                 :
                 <div>
@@ -324,7 +356,7 @@ export default function DrawingArea() {
                         variant='h5'
                         style={{marginBottom: 20, marginTop: 10}}
                     >
-                        Upload your image!
+                        Upload your Image
                     </Typography>
                     <Dropzone onDrop={handleDrop}>
                     {({ getRootProps, getInputProps }) => (
@@ -346,7 +378,7 @@ export default function DrawingArea() {
                     </Dropzone>
                 </div>
                 }
-            </div>
+            </Paper>
         </div>
     )
 }
