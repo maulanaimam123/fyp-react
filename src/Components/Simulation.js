@@ -16,6 +16,12 @@ const useStyles = makeStyles((theme) => ({
         width: '100%',
         height: '100%'
     },
+    itemContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%'
+    },
     button: {
         width: 100,
         margin: theme.spacing(1)
@@ -35,9 +41,16 @@ export default function Simulation() {
     const [progress, setProgress] = useState('Initializing Process...')
     const [result, setResult] = useState({})
     socket.on('progress_change', currProgress => setProgress(currProgress))
-    socket.on('finish_simulation', ({ dataBefore, dataAfter }) => {
+    socket.on('finish_simulation', (data) => {
+        const { dataBefore, dataAfter } = data
+        console.log('data is, ', data)
+
+        const parsedDataBefore = JSON.parse(dataBefore)
+        const parsedDataAfter = JSON.parse(dataAfter)
+        setResult({before: parsedDataBefore, after: parsedDataAfter})
+        console.log('this is data before', parsedDataBefore)
+        console.log('this is data after:', parsedDataAfter)
         setProgress('done')
-        setResult({dataBefore: JSON.parse(dataBefore), dataAfter: JSON.parse(dataAfter)})
     })
 
     const boardStyle = {
@@ -60,28 +73,32 @@ export default function Simulation() {
                 isStarted?
                     <div className={classes.centerContainer}>
                         {progress === 'done'?
-                        <div className={classes.centerContainer}>
-                            <Typography variant='h5' className={classes.title}>
-                                Profile Correction is Done!
-                            </Typography>
+                        <div style={{width: '85%'}}>
+                            <div className={classes.itemContainer}>
+                                <Typography variant='h5' className={classes.title}>
+                                    Profile Correction is Done!
+                                </Typography>
+                            </div>
                             <CompositionViewer 
-                                dataBefore={result.dataBefore}
-                                dataAfter={result.dataAfter}/>
-                            <Button
-                                className={classes.button}
-                                variant='contained'
-                                color='primary'
-                                onClick={handleSave}>
-                                Save
-                            </Button>
-                            <Button
-                                className={classes.button}
-                                variant='outlined'
-                                color='secondary'
-                                onClick={() => setStep(step - 1) }
-                            >
-                                Back
-                            </Button>
+                                dataBefore={result.before}
+                                dataAfter={result.after}/>
+                            <div className={classes.itemContainer}>
+                                <Button
+                                    className={classes.button}
+                                    variant='outlined'
+                                    color='secondary'
+                                    onClick={() => setStep(step - 1) }
+                                >
+                                    Back
+                                </Button>
+                                <Button
+                                    className={classes.button}
+                                    variant='contained'
+                                    color='primary'
+                                    onClick={handleSave}>
+                                    Save
+                                </Button>
+                            </div>
                         </div> :
                         <Spinner message={progress}/>
                         }

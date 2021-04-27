@@ -26,10 +26,11 @@ TEMPLATE_NUM_REGIONS = 30 # based on the available template.
                           # if you want something larger, create a dummy template (.sim file)
                           # with as many regions as you want (include substrates on both ends), then change this number
 
-POSITION = 'POSITION'
-THICKNESS = 'THICKNESS'
+POSITION = 'POSITION' # in micrometer (um)
+THICKNESS = 'THICKNESS' # in micrometer (um)
 REGION_NAME = 'REGION_NAME'
-BEAM_POSITION = 'BEAM_POSITION'
+TOTAL = 'TOTAL'
+BEAM_POSITION = 'BEAM_POSITION' # still in micrometer (um)
 
 CASINO_PATH = './dependencies/pymontecarlo-casino2/pymontecarlo_casino2/casino2/'
 CASINO_EXEC = 'wincasino2_64.exe'
@@ -40,6 +41,10 @@ CAS_FILE_NAME = 'options.cas'
 
 # Utility functions
 def generate_colors(rgb1 = (0,255,0), rgb2 = (0,0,255), steps = 0):
+    '''
+    Function to generate colors of the materials
+    return list of colors of length = steps + 1
+    '''
     colors = [ rgb1 ]
     r1, g1, b1 = rgb1
     r2, g2, b2 = rgb2
@@ -52,9 +57,14 @@ def generate_colors(rgb1 = (0,255,0), rgb2 = (0,0,255), steps = 0):
     return [rgb2hex(*color) for color in colors] # steps + 1 in length
 
 def generate_densities(elements_data, density_start = None, density_end = None):
+    '''
+    Function to generate densities of materials
+    if one density is not specified, return [None]*len(data)
+    else: return linear combination of the densities, length = len(data)
+    '''
     # if any or both densities are not specified, return None
     if not (density_start and density_end):
-        return None
+        return [None]*len(elements_data)
     
     # Otherwise, return array of densities, determined by linear similarity of elements
     # 1. Standardise values using StandardScaler to remove magnitude dependencies
@@ -74,6 +84,9 @@ def generate_densities(elements_data, density_start = None, density_end = None):
     return list(densities)
 
 def get_elements_list(data):
+    '''
+    Function to get list of elements in the data from dataframe
+    '''
     all_cols = list(data.columns)
     all_cols.remove(POSITION)
     if THICKNESS in all_cols:
@@ -82,9 +95,24 @@ def get_elements_list(data):
         all_cols.remove(BEAM_POSITION)
     if REGION_NAME in all_cols:
         all_cols.remove(REGION_NAME)
+    if TOTAL in all_cols:
+        all_cols.remove(TOTAL)
     return all_cols
 
+def get_elements_data(data):
+    '''
+    Functions to extract element-only data from dataframe
+    '''
+    cols = get_elements_list(data)
+    elements_data = data[cols]
+    return elements_data
+
 def to_weight_fraction(composition):
+    '''
+    Function to convert atomic percentage to weight percentage
+    input: composition - dict({'Mg': 0.242, 'O': 0.214, ...}) --> atomic percentage, atomic symbol as keys
+    output: dict({24: 0.521, 16: 0.213, 8: 0.112, ...}) --> weight percentage, atomic no. as keys
+    '''
     total_mass = 0
     wt_fractions = {}
     for el_string, at_fraction in composition.items():
@@ -118,11 +146,21 @@ def create_program(num_of_trajectory = 5000):
     program = Casino2Program(num_of_trajectory if num_of_trajectory > 2000 else NUM_OF_ELECTRON) # minimum 2000 trajectories
     return program
 
+def build_options(samples, beams, analysis, program):
+    options_builder = OptionsBuilder()
+    options_builder.add_program(program)
+    for sample in samples:
+        options_builder.add_sample(sample)
+    for beam in beams:
+        options_builder.add_beam(beam)
+    options_builder.add_analysis(analysis)
+    options = options_builder.build()
+    return options
+
 
 # Functions to create model options
 def create_model_sample(data, density_start = None, density_end = None):
-    cols = get_elements_list(data)
-    elements_data = data[cols]
+    elements_data = get_elements_data(data)
     
     colors = generate_colors(steps = len(data) - 1)
     densities = generate_densities(elements_data, density_start, density_end)
@@ -133,11 +171,8 @@ def create_model_sample(data, density_start = None, density_end = None):
     
     # Iterate through all regions
     for i in range(1, len(data) - 1): # create the remaining regions (in the middle)
-        density = None
-        color = None
-        if isinstance(densities, list) and isinstance(colors, list):
-            density = densities[i]
-            color = colors[i]
+        density = densities[i]
+        color = colors[i]
         material = Material(
                             name = f'region_{i}',
                             composition = to_weight_fraction(dict(elements_data.iloc[i])),
@@ -164,17 +199,6 @@ def create_model_beams(data, energy_keV = 15.0, beam_diameter_m = 20e-9):
     beams = beam_builder.build()
     return beams
 
-def build_options(samples, beams, analysis, program):
-    options_builder = OptionsBuilder()
-    options_builder.add_program(program)
-    for sample in samples:
-        options_builder.add_sample(sample)
-    for beam in beams:
-        options_builder.add_beam(beam)
-    options_builder.add_analysis(analysis)
-    options = options_builder.build()
-    return options
-
 
 # Functions to create homogeneous options
 def create_homogeneous_sample(data, density_start = None, density_end = None):
@@ -183,8 +207,7 @@ def create_homogeneous_sample(data, density_start = None, density_end = None):
     input: dataframe of atomic fractions at various positions
     output: list[Substrate]
     '''
-    cols = get_elements_list(data)
-    elements_data = data[cols]
+    elements_data = get_elements_data(data)
     
     colors = generate_colors(steps = len(data) - 1)
     densities = generate_densities(elements_data, density_start, density_end)
@@ -195,10 +218,8 @@ def create_homogeneous_sample(data, density_start = None, density_end = None):
     
      # 2. Iterate through all regions, create the material representations
     for i in range(1, len(data) - 1):
-        density, color = None, None
-        if isinstance(densities, list) and isinstance(colors, list):
-            density = densities[i]
-            color = colors[i]
+        density = densities[i]
+        color = colors[i]
         material = Material(
                             name = f'region_{i}',
                             composition = to_weight_fraction(dict(elements_data.iloc[i])),
@@ -215,6 +236,7 @@ def create_homogeneous_beam(energy_keV = 15, beam_diameter_m = 20e-9):
     beam = GaussianBeam(energy_eV = 1000*energy_keV, diameter_m = beam_diameter_m) # default position is at x = 0 nm
     return beam
 
+
 # Main functions to build options
 def build_homogeneous_options(df, session):
     '''
@@ -225,7 +247,7 @@ def build_homogeneous_options(df, session):
                                                      session['density_start'],
                                                      session['density_end'])
     beam = create_homogeneous_beam( energy_keV=session['energy'],
-                                    beam_diameter_m=session['beam_diameter'])
+                                    beam_diameter_m=session['beam_diameter']*1e-9) # session['beam_diameter'] is in nm
     analysis = create_analysis()
     program = create_program(session['number_of_electron'])
 
@@ -242,9 +264,9 @@ def build_model_options(df, session):
                                         density_end = session['density_end'])
     model_beams = create_model_beams(   data = df,
                                         energy_keV = session['energy'],
-                                        beam_diameter_m = session['beam_diameter']*1e-9)
+                                        beam_diameter_m = session['beam_diameter']*1e-9) # beam diameter is still in nm, convert to m
     analysis = create_analysis()
-    program = create_program(int(session['number_of_electron']))
+    program = create_program(session['number_of_electron'])
 
     model_options = build_options([model_sample], model_beams, analysis, program)
     return model_options
@@ -333,6 +355,12 @@ def get_correction_factor(model_data, homogeneous_data):
     """
     Im = model_data.set_index(REGION_NAME).sort_index()
     Ih = homogeneous_data.set_index(REGION_NAME).sort_index()
+    
+    print('================= XRay intensities: model, homogeneous =============')
+    print(Im.head())
+    print(Ih.head())
+    print('=====================================================================')
+    print('')
     return (Ih + (Ih - Im)) / (Ih + EPSILON) # epsilon for safety incase division by 0
 
 def get_corrected_profile(profile_data, correction):
@@ -348,4 +376,10 @@ def get_corrected_profile(profile_data, correction):
 def correct_profile(df, df_homogeneous, df_model):
     correction_factor = get_correction_factor(df_model, df_homogeneous)
     corrected_profile = get_corrected_profile(df, correction_factor)
+
+    print('************ Correction Factor, Corrected Profile ***********')
+    print(correction_factor.head())
+    print(corrected_profile.head())
+    print('*************************************************************')
+    print('')
     return df, corrected_profile # brefore, after

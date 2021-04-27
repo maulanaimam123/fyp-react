@@ -38,7 +38,6 @@ export default function CompositionViewer({ data, dataBefore, dataAfter }) {
             }, {})
         }
         const selectedData = data || dataBefore
-        console.log('selected Data is ', selectedData)
         return selectedData.map((entry, id) => (
             {
                 ...getValue(data, id, ''),
@@ -48,7 +47,6 @@ export default function CompositionViewer({ data, dataBefore, dataAfter }) {
         ))
     }
     const rechartsData = getRechartsData()
-    console.log(data)
     const selectedData = data || dataBefore
     const buttonList = Object.keys(selectedData[0]).filter(key => (key !== 'POSITION'))
     const [plot, setPlot] = useState(buttonList[0])
@@ -83,7 +81,10 @@ export default function CompositionViewer({ data, dataBefore, dataAfter }) {
                                 position="bottom"
                                 style={{ textAnchor: "middle" }}/>
                         </XAxis>
-                        <YAxis domain={['dataMin', 'dataMax']} />
+                        <YAxis
+                            domain={['dataMin', 'dataMax']}
+                            tickFormatter={value => parseFloat(value).toFixed(2)}
+                            />
                         {data && <Line
                             type="monotone"
                             name='Before'

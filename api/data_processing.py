@@ -271,7 +271,8 @@ def convert_to_dict(df, removed_cols = []):
     '''
     cols = list(df.columns)
     for col in removed_cols:
-        cols.remove(col)
+        if col in cols:
+            cols.remove(col)
 
     selected_df = df[cols]
     

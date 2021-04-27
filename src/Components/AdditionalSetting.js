@@ -62,17 +62,21 @@ export default function AdditionalSetting() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         const data = e.target
-
+        const dataValue = {
+            'sample_name': data.sampleName.value,
+            'number_of_electron': data.numberOfElectron.value,
+            'energy': data.energy_keV.value,
+            'beam_diameter': data.beamDiameter.value,
+            'density_start': data.densityStart.value,
+            'density_end': data.densityEnd.value
+        }
+        console.log('confirming parameters', dataValue)
+        
         const formData = new FormData()
-        formData.append('sample_name', data.sampleName.value)
-        formData.append('number_of_electron', data.numberOfElectron.value)
-        formData.append('energy', data.energy_keV.value)
-        formData.append('beam_diameter', data.beamDiameter.value)
-        formData.append('density_start', data.densityStart.value)
-        formData.append('density_end', data.densityEnd.value)
+        for (const [key, value] of Object.entries(dataValue)) {
+            formData.append(key, value);
+        }
 
-        console.log(formData)
-        console.log('post request...')
         const response = await axios.post('/confirm_parameters', formData)
 
         setStillFetching(false)

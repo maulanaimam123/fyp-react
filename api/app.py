@@ -154,7 +154,18 @@ def confirm_parameters():
     else:
         session['density_end'] = float(session['density_end'])
 
-    print(f'density value is {[session["density_start"], session["density_end"]]}')
+    print('This is the data in session')
+    print('------------------------------------------------------------')
+    print('')
+    print(f'sample_name is {session["sample_name"]}, type is {type(session["sample_name"])}')
+    print(f'number_of_electron is {session["number_of_electron"]}, type is {type(session["number_of_electron"])}')
+    print(f'energy is {session["energy"]}, type is {type(session["energy"])}')
+    print(f'beam_diameter is {session["beam_diameter"]}, type is {type(session["beam_diameter"])}')
+    print(f'density_start is {session["density_start"]}, type is {type(session["density_start"])}')
+    print(f'density_end is {session["density_end"]}, type is {type(session["density_end"])}')
+    print('')
+    print('------------------------------------------------------------')
+
 
     return jsonify(success=True)
 
@@ -188,7 +199,7 @@ def start_simulation():
     # Reading data
     print('reading data...')
     set_status('Reading line profile data...')
-    df = pd.read_csv(os.path.join(TEMP_PATH_CSV, f'{session["session_id"]}.csv'))
+    df = pd.read_csv(os.path.join(TEMP_PATH_CSV, f'{session["session_id"]}.csv')) # cleaned version
     set_status('Reading data complete')
     
     # Creating simulation options
@@ -210,14 +221,26 @@ def start_simulation():
         df_homogeneous, df_model = simulate(df_homogeneous,
                                             df_model,
                                             homogeneous_option,
-                                            model_option)          
+                                            model_option)
+    print('-------------df_homogeneous, df_model--------------')
+    print(df_homogeneous.head())
+    print(df_model.head())
+    print('---------------------------------------------------')
+    print('')
+
+    # saving intensity data
+    df_homogeneous.to_csv(os.path.join(TEMP_PATH_SIMULATION, 'intensity_homogeneous.csv'), index=False)
+    df_model.to_csv(os.path.join(TEMP_PATH_SIMULATION, 'intensity_model.csv'), index=False)
 
     # Data analysis
     print('analysing data...')
+    set_status('Analysing data...')
     before, after = correct_profile(df, df_homogeneous, df_model)
     before.to_csv(os.path.join(TEMP_PATH_SIMULATION, 'before.csv'), index=False)
     after.to_csv(os.path.join(TEMP_PATH_SIMULATION, 'after.csv'), index=False)
-    socketio.emit('finish_simulation', {'dataBefore': convert_to_dict(before), 'dataAfter': convert_to_dict(after)})
+    socketio.emit('finish_simulation',
+                 {'dataBefore': convert_to_dict(before, removed_cols=[THICKNESS, BEAM_POSITION, REGION_NAME]),
+                  'dataAfter': convert_to_dict(after, removed_cols=[THICKNESS, BEAM_POSITION, REGION_NAME])})
 
     return jsonify(success=True)
 
