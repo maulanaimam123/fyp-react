@@ -1,8 +1,9 @@
-import { Container, Button, ButtonGroup } from '@material-ui/core';
+import { Container, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { StyledButton } from './Home.js'
 import TopAppBar from './TopAppBar'
 import { Toolbar, Typography } from '@material-ui/core';
+import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
+
 
 const useStyles = makeStyles({
   root: {
@@ -14,38 +15,71 @@ const useStyles = makeStyles({
     padding: '5px 20px',
     textAlign: 'left'
   },
-  listButton: {
-    paddingTop: 15,
-    paddingBottom: 15
+  button: {
+    background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
+    border: 0,
+    marginBottom: 15,
+    marginTop: 50,
+    borderRadius: 20,
+    color: 'white',
+    padding: '5px 30px',
+    fontSize: '90%'
+  },
+  contentWrapper: {
+    padding: 20
+  },
+  title: {
+    marginBottom: 50
+  },
+  listWrapper: {
+    paddingLeft: 50,
+    paddingRight: 50
+  },
+  buttonContainer: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'flex-end'
   }
 })
 
 function GuideLine() {
   const classes = useStyles()
   const steps = [
-    '1. Determine Beam Diameter',
-    '2. Upload Line Profile Data',
-    '3. Determine Microscope Setup',
+    '1. Determine microscope beam diameter',
+    '2. Upload line profile data',
+    '3. Input additional settings',
     '4. Simulation'
   ]
   return (
     <div>
       <TopAppBar text='Workflow'/>
       <Toolbar />
-      <Container className="App" maxWidth='sm'>
-        <header className="App-header">
-          <h2>Steps:</h2>
-          <ButtonGroup
-            orientation="vertical"
-            className={classes.root}
-            color='inherit'
-            aria-label="vertical contained primary button group"
-            variant="text"
+      <Container maxWidth='sm'>
+        <div className={classes.contentWrapper}>
+          <Typography
+            variant='h5'
+            className={classes.title}
           >
-            {steps.map(s => (<Button className={classes.listButton}>{`${s}`}</Button>))}
-          </ButtonGroup>
-          <StyledButton text='Next' link='/working_board' />
-        </header>
+            Step-by-step Guideline
+          </Typography>
+          <div className={classes.listWrapper}>
+            {steps.map((step, id) => (
+              <div>
+                <Typography>{step}</Typography>
+                {id !== steps.length - 1 && <hr style={{opacity: '50%'}}/>}
+              </div>
+            ))}
+          </div>
+          <div className={classes.buttonContainer}>
+            <Button
+                className={classes.button}
+                href='/working_board'
+              >
+                Next
+                <ArrowForwardIcon />
+            </Button>
+          </div>
+        </div>
       </Container>
     </div>
   );
