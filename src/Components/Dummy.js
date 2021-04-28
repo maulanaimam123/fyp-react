@@ -1,15 +1,52 @@
-import React from 'react'
-import CompositionViewer from './CompositionViewer'
+import React, { useState } from 'react'
+import { Button, Snackbar } from '@material-ui/core'
+import MuiAlert from '@material-ui/lab/Alert'
+import axios from 'axios'
+import FileDownload from 'js-file-download'
 
 export default function Dummy() {
-    // This is a dummy section to test components while in still development
-    const dataBefore = {'Mg': [1,2,3], 'Fe': [3,2,1], 'O': [1,2,3], 'Si':[3,2,1], 'POSITION': [0,1,3]}
-    const dataAfter = {'Mg': [3,2,1], 'Fe': [1,2,3], 'O': [3,2,1], 'Si':[1,2,3], 'POSITION': [0,1,3]}
-    const data = {'Mg': [3,2,1], 'Fe': [1,2,3], 'O': [3,2,1], 'Si':[1,2,3], 'Na': [4,3,2], 'POSITION': [0,1,3]}
+    const [alert, setAlert] = useState({isOpen: false, message: null, type: 'success'})
+    const [open, setOpen] = useState(false)
+    const [alertMessage, setAlertMessage] = useState('')
+    const [alertType, setAlertType] = useState('success')
+
+    const handleAlertClose = (event, reason) => {
+        if (reason === 'clickaway') {
+          return;
+        }
+        setAlert({...alert, isOpen: false});
+    };
+    const handleClick = () => {
+        axios
+            .get('/download')
+            .then(res => {
+                console.log(res)
+                const fileName = res.headers['content-disposition'].split("filename=")[1]
+                FileDownload(res.data, fileName)
+                setAlert({
+                    message: 'Download Success!',
+                    type: 'success',
+                    isOpen: true
+                })
+            })
+            .catch(err => {
+                setAlert({
+                    message: err.response.data,
+                    type: 'error',
+                    isOpen: true
+                })
+            })
+    }
     return (
         <div style={{border: '1px solid black', background:'white', padding: 15, width: '60%'}}>
-            <CompositionViewer dataBefore={dataBefore} dataAfter={dataAfter}/>
-            <CompositionViewer data={data}/>
+            <Button variant='contained' color='primary' onClick={handleClick}>
+                Download
+            </Button>
+            <Snackbar open={alert.isOpen} autoHideDuration={6000} onClose={handleAlertClose}>
+                <MuiAlert elevation={6} variant="filled" onClose={handleAlertClose} severity={alert.type}>
+                    {alert.message}
+                </MuiAlert>
+            </Snackbar>
         </div>
     )
 }

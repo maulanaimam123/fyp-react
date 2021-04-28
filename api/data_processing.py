@@ -277,3 +277,12 @@ def convert_to_dict(df, removed_cols = []):
     selected_df = df[cols]
     
     return selected_df.to_json(orient='records')
+
+def get_csv_filename(filename):
+    '''
+    Utility function to convert filename of 
+    any extension to csv
+    '''
+    extension = filename.split('.')[-1]
+    final_filename = filename.replace(extension, 'csv')
+    return final_filename

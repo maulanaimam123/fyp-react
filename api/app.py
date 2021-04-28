@@ -1,4 +1,4 @@
-from flask import Flask, request, Response, jsonify, abort, session
+from flask import Flask, request, jsonify, abort, session, send_from_directory, send_file
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from werkzeug.utils import secure_filename
@@ -84,6 +84,9 @@ def upload_excel():
     file = request.files['file']
     file_name = request.form['fileName']
     try:
+        # Save filename for later use
+        session['file_name'] = file_name
+
         # Reading excel to pandas dataframe
         df = read_file(file, file_name)
     
@@ -189,10 +192,6 @@ def start_simulation():
     End point to preprocess data, simulate, and correcting
     line profile data.
     '''
-    
-    print('-------------------------------')
-    print('       starting process        ')
-    print('-------------------------------')
     set_status('Process started...')
     time.sleep(0.3)
 
@@ -236,13 +235,27 @@ def start_simulation():
     print('analysing data...')
     set_status('Analysing data...')
     before, after = correct_profile(df, df_homogeneous, df_model)
-    before.to_csv(os.path.join(TEMP_PATH_SIMULATION, 'before.csv'), index=False)
-    after.to_csv(os.path.join(TEMP_PATH_SIMULATION, 'after.csv'), index=False)
+    file_name = 'Corrected-' + get_csv_filename(session['file_name'])
+    after.to_csv(os.path.join(TEMP_PATH_SIMULATION, file_name), index=False)
     socketio.emit('finish_simulation',
                  {'dataBefore': convert_to_dict(before, removed_cols=[THICKNESS, BEAM_POSITION, REGION_NAME]),
                   'dataAfter': convert_to_dict(after, removed_cols=[THICKNESS, BEAM_POSITION, REGION_NAME])})
 
     return jsonify(success=True)
+
+@app.route('/download_result', methods = ['GET'])
+def download():
+    print('---------------------------')
+    print('  Downloading result...    ')
+    print('---------------------------')
+
+    try:
+        file_name = 'Corrected-' + get_csv_filename(session['file_name'])
+        response = send_file(os.path.join(TEMP_PATH_SIMULATION, file_name), as_attachment=True)
+        response.cache_control.max_age = 10 
+        return response
+    except FileNotFoundError:
+        abort(404)
 
 if __name__ == '__main__':
     socketio.run(app)
