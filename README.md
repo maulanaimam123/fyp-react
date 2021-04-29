@@ -39,7 +39,7 @@ There are several steps to get this app running:
     Put the template files (VerticalLayers30.sim) under this directory: "api/dependencies/pymontecarlo-casino2/pymontecarlo_casino2/templates". <br/>
     This is just a regular .sim file with 30 horizontal layers (including substrates). <br/>
     If you need more regions, you can create it using CASINO v.2.5.0 software and change the line:
-    ```python
+    ```bash
     TEMPLATE_NUM_REGIONS = 30
     ```
     In the file "api/simulation.py" to the number of regions you want.<br/>
