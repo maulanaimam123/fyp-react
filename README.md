@@ -35,9 +35,15 @@ There are several steps to get this app running:
     - [PyMonteCarlo](https://github.com/pymontecarlo/pymontecarlo)
     - [PyMonteCarloCasino2](https://github.com/pymontecarlo/pymontecarlo-casino2)
     <br/><br/>
-    And put them under this directory: "api/dependencies".<br/>
-    Put the template files (VerticalLayers30.sim) under this directory: "api/dependencies/pymontecarlo-casino2/pymontecarlo_casino2/templates". <br/>
-    This is just a regular .sim file with 30 horizontal layers (including substrates). <br/>
+    And put them under this directory: <br/>
+    ```bash
+    api/dependencies
+    ```
+    Put the template files (VerticalLayers30.sim) under this directory:
+    ```bash
+    api/dependencies/pymontecarlo-casino2/pymontecarlo_casino2/templates
+    ```
+    This is just a regular .sim file with 30 vertical layers (grain boundaries), including substrates. <br/>
     If you need more number of regions, you can create the .sim file using CASINO v2.5.0 software and change this line: <br/>
     ``` bash
     TEMPLATE_NUM_REGIONS = 30
