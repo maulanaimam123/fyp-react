@@ -373,9 +373,23 @@ def get_corrected_profile(profile_data, correction):
     corrected_profile[POSITION] = profile_by_name[POSITION]
     return corrected_profile.sort_values(POSITION).reset_index()
 
+def normalize_elements(df):
+    '''
+    Function to normalize atom percentages to sum up to 100%.
+    '''
+    elements_data = get_elements_data(df).copy()
+    elements_list = list(elements_data.columns)
+    non_elements_list = [col for col in df.columns if col not in elements_list]
+
+    elements_data['total_at'] = elements_data.sum(axis=1)
+    for el in elements_list:
+        elements_data[el] = elements_data[el]*100 / elements_data['total_at']
+    
+    return pd.concat([df[non_elements_list], elements_data[elements_list]], axis=1)
+
 def correct_profile(df, df_homogeneous, df_model):
     correction_factor = get_correction_factor(df_model, df_homogeneous)
-    corrected_profile = get_corrected_profile(df, correction_factor)
+    corrected_profile = normalize_elements(get_corrected_profile(df, correction_factor))
 
     print('************ Correction Factor, Corrected Profile ***********')
     print(correction_factor.head())
